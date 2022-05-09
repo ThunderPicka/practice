@@ -44,7 +44,8 @@ public class DataSourceServiceImpl implements IDataSourceService {
         log.info("获取到指定sql="+sql);
         JdbcTemplate jdbcTemplate = this.connect2AnotherOne(this.getDataSourceInfo(id));
         log.info("从数据源已注入成功");
-        return  jdbcTemplate.queryForList(sql);
+        List<Map<String, Object>> maps = jdbcTemplate.queryForList(sql);
+        return maps;
     }
 
     @Override

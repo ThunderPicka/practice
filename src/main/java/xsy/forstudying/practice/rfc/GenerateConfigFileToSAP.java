@@ -15,8 +15,8 @@ import java.util.Properties;
  * @author Hugh
  */
 @Slf4j
-public class GeneratroConfigFileToSAP {
-//	private static Logger log = Logger.getLogger(GeneratroConfigFileToSAP.class); // 初始化日志对象
+public class GenerateConfigFileToSAP {
+//	private static Logger log = Logger.getLogger(GenerateConfigFileToSAP.class); // 初始化日志对象
 	private static final String ABAP_AS_SAP_800 = "ABAP_AS_SAP800";
 	static{
 		Properties connectProperties = new Properties();
