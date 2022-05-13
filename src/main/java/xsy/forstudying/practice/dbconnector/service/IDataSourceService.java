@@ -16,4 +16,6 @@ public interface IDataSourceService {
     List<Map<String, Object>> getResult(Long id) throws Exception;
 
     List<DataSourceInfo> queryAll();
+
+    List<Map<String, Object>> testInsert(Long id) throws Exception;
 }
