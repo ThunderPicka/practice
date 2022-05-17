@@ -1,11 +1,10 @@
 package xsy.forstudying.practice.dbconnector.mapper;
 
 
-import jdk.nashorn.internal.objects.annotations.Setter;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import xsy.forstudying.practice.dbconnector.model.DataSourceInfo;
-import xsy.forstudying.practice.dbconnector.model.SqlInfo;
+import xsy.forstudying.practice.dbconnector.model.SQLInfo;
 
 import java.util.List;
 
@@ -19,16 +18,16 @@ import java.util.List;
 public interface MasterDataSourceMapper {
     @Select("select id,url,drive_class_name as driverClassName,user_name as userName,password " +
             "from datasource " +
-            "where id=#{id}")
-    DataSourceInfo queryById(Long id);
+            "where id=#{dbId}")
+    DataSourceInfo queryById(Long dbId);
 
-    @Select("select statement from sql_mapper where db_id=#{id}")
-    String getSql(Long id);
+    @Select("select id,statement,db_id as dbId,source_code as sourceCode,sql_type as sqlType from sql_mapper where id=#{sqlId}")
+    SQLInfo getSQLBySqlId(Long sqlId);
+
+    @Select("select id,statement,db_id as dbId,source_code as sourceCode,sql_type as sqlType from sql_mapper where db_id=#{dbId} and sql_type=#{sqlType} limit 1")
+    SQLInfo getSQLByCondition(Long dbId, Integer sqlType);
 
     @Select("select id,url,drive_class_name as driverClassName,user_name as userName,password " +
-            "from datasource")
+            "from datasource limit 10")
     List<DataSourceInfo> queryAll();
-
-    @Select("select id,statement,db_id as dbId from sql_mapper where id=#{id}")
-    SqlInfo getFullSql(Long sqlId);
 }

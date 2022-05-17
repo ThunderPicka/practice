@@ -2,6 +2,7 @@ package xsy.forstudying.practice.dbconnector.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * @author XuSiyu
@@ -10,8 +11,10 @@ import lombok.Setter;
  **/
 @Getter
 @Setter
-public class SqlInfo {
+@ToString
+public class SQLInfo {
     private Long id;
     private String statement;
     private Long dbId;
+    private Integer sqlType;
 }

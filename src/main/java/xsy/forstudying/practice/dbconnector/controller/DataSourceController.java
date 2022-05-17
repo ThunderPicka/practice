@@ -24,13 +24,13 @@ public class DataSourceController {
 
     /**
      * 根据数据库id查询配置信息连接数据库并执行与之匹配的sql
-     * @param id
+     * @param dbId
      * @return
      * @throws Exception
      */
-    @GetMapping("/connect")
-    public List<Map<String, Object>> dbConnector(@RequestParam Long id) throws Exception {
-        List<Map<String, Object>> result = dataSourceService.getResult(id);
+    @GetMapping("/connect-query")
+    public List<Map<String, Object>> connectDbToQueryAll(@RequestParam Long dbId) throws Exception {
+        List<Map<String, Object>> result = dataSourceService.connectDbToQueryAll(dbId);
         return result;
     }
 
@@ -38,9 +38,9 @@ public class DataSourceController {
      * 查询所有数据库配置信息
      * @return
      */
-    @GetMapping("/test/db/query")
+    @GetMapping("/datasource/query")
     public List<DataSourceInfo> queryAllDataSourceInfo() {
-        return dataSourceService.queryAll();
+        return dataSourceService.queryAllDataSourceInfo();
     }
 
     /**
@@ -67,7 +67,7 @@ public class DataSourceController {
      * 新增sql
      * @return
      */
-    @PostMapping("/sql/add")
+    @PostMapping("/configuration/sql/add")
     public String addSql(){
         return null;
     }
@@ -76,7 +76,7 @@ public class DataSourceController {
      * 修改sql
      * @return
      */
-    @PostMapping("/sql/edit")
+    @PostMapping("/configuration/sql/edit")
     public String editSql(){
         return null;
     }
@@ -84,8 +84,20 @@ public class DataSourceController {
     /**
      * 测试插入语句,并返回插入结果
      */
-    @GetMapping("/test/insert")
-    public List<Map<String,Object>> testInsert(@RequestParam("id") Long id) throws Exception {
-        return dataSourceService.testInsert(id);
+    @GetMapping("/sql/execute-insert")
+    public Integer executeInsertSQL(@RequestParam("sqlId") Long sqlId) throws Exception {
+        return dataSourceService.executeInsertSQL(sqlId);
+    }
+    @GetMapping("/sql/execute-delete")
+    public Integer executeDeleteSQL(@RequestParam("sqlId") Long sqlId) throws Exception {
+        return dataSourceService.executeDeleteSQL(sqlId);
+    }
+    @GetMapping("/sql/execute-update")
+    public Integer executeUpdateSQL(@RequestParam("sqlId") Long sqlId) throws Exception {
+        return dataSourceService.executeUpdateSQL(sqlId);
+    }
+    @GetMapping("/sql/execute-query")
+    public List<Map<String,Object>> executeQuerySQL(@RequestParam("sqlId") Long sqlId) throws Exception {
+        return dataSourceService.executeQuerySQL(sqlId);
     }
 }

@@ -1,22 +1,20 @@
 package xsy.forstudying.practice.dbconnector.service.impl;
 
-import javafx.beans.binding.ObjectBinding;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import xsy.forstudying.practice.dbconnector.config.DataSourceConfig;
+import xsy.forstudying.practice.dbconnector.constant.SQLTypeConstant;
 import xsy.forstudying.practice.dbconnector.mapper.MasterDataSourceMapper;
 import xsy.forstudying.practice.dbconnector.model.DataSourceInfo;
-import xsy.forstudying.practice.dbconnector.model.SqlInfo;
-import xsy.forstudying.practice.dbconnector.model.XsyTest;
+import xsy.forstudying.practice.dbconnector.model.SQLInfo;
 import xsy.forstudying.practice.dbconnector.service.IDataSourceService;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * @author XuSiYu
@@ -39,51 +37,91 @@ public class DataSourceServiceImpl implements IDataSourceService {
         return DataSourceConfig.connectDataSource(dataSourceInfo);
     }
 
-    @Override
-    public String getSql(Long id) {
-        return masterDataSourceMapper.getSql(id);
+    public JdbcTemplate establishConnectionBySql(SQLInfo sqlInfo) throws Exception {
+        DataSourceInfo dataSourceInfo = getDataSourceInfo(sqlInfo.getDbId());
+        log.info("获取到数据源dataSource=" + dataSourceInfo.toString());
+        JdbcTemplate jdbcTemplate = connect2AnotherOne(dataSourceInfo);
+        log.info("从数据源已注入成功");
+        return jdbcTemplate;
     }
 
     @Override
-    public List<Map<String, Object>> getResult(Long id) throws Exception {
-        String sql = this.getSql(id);
-        log.info("获取到指定sql=" + sql);
-        JdbcTemplate jdbcTemplate = this.connect2AnotherOne(this.getDataSourceInfo(id));
-        log.info("从数据源已注入成功");
-        List<Map<String, Object>> maps = jdbcTemplate.queryForList(sql);
+    public SQLInfo getSQLBySQLId(Long sqlId) {
+        return masterDataSourceMapper.getSQLBySqlId(sqlId);
+    }
+
+    @Override
+    public List<Map<String, Object>> executeQuerySQL(Long sqlId) throws Exception {
+        SQLInfo sql = masterDataSourceMapper.getSQLBySqlId(sqlId);
+        log.info("获取到sql=" + sql.getStatement());
+        JdbcTemplate jdbcTemplate = establishConnectionBySql(sql);
+        List<Map<String, Object>> maps = jdbcTemplate.queryForList(sql.getStatement());
         return maps;
     }
 
     @Override
-    public List<DataSourceInfo> queryAll() {
+    public List<Map<String, Object>> connectDbToQueryAll(Long dbId) throws Exception {
+        log.info("根据dbId={}查询数据源配置参数", dbId);
+        DataSourceInfo dataSourceInfo = getDataSourceInfo(dbId);
+        log.info("根据dbId={}查询数据源配置参数为DataSourceInfo={}", dbId, dataSourceInfo.toString());
+        JdbcTemplate jdbcTemplate = connect2AnotherOne(dataSourceInfo);
+        SQLInfo sql = getSQLByCondition(dbId, SQLTypeConstant.QUERY_CODE);
+        List<Map<String, Object>> maps = jdbcTemplate.queryForList(sql.getStatement());
+        log.info("查询结果为", maps.toString());
+        return maps;
+    }
+
+    private SQLInfo getSQLByCondition(Long dbId, Integer sqlType) {
+        log.info("根据dbId={},sqlType={}查询SQL语句", dbId, sqlType);
+        SQLInfo sqlByCondition = masterDataSourceMapper.getSQLByCondition(dbId, sqlType);
+        log.info("根据dbId={},sqlType={}查询出SQL语句={}", dbId, sqlType, sqlByCondition.toString());
+
+        return sqlByCondition;
+    }
+
+    @Override
+    public List<DataSourceInfo> queryAllDataSourceInfo() {
         return masterDataSourceMapper.queryAll();
     }
 
     @Override
-    public List<Map<String, Object>> testInsert(Long sqlId) throws Exception {
-        SqlInfo sql = masterDataSourceMapper.getFullSql(sqlId);
-        DataSourceInfo dataSourceInfo = this.getDataSourceInfo(sql.getDbId());
-        JdbcTemplate jdbcTemplate = this.connect2AnotherOne(dataSourceInfo);
-//        Long id = new Long(Integer.valueOf((int) Math.random() * 1000));
-        Integer id = Integer.valueOf((int) (Math.random() * 1000));
-        XsyTest xsyTest = new XsyTest(id, "徐司宇", Integer.valueOf(25), "你猜", "诶嘿，我就不说");
-        Object[] objects = attributes2Array(xsyTest);
-        //此处注意,如果数据库字段名称为小写，就很有可能需要SQL对字段名用""
-        jdbcTemplate.update("insert into JEECGBOOT.XSY_TEST(id,name,age,address,company) values(?,?,?,?,?)", objects);
+    @Transactional
+    public Integer executeInsertSQL(Long sqlId) throws Exception {
+        SQLInfo sql = masterDataSourceMapper.getSQLBySqlId(sqlId);
+        log.info("获取到sql="+sql.getStatement());
+        JdbcTemplate jdbcTemplate =establishConnectionBySql(sql);
+        int result = jdbcTemplate.update(sql.getStatement(), 1, "XSY测试JDBCTemplate", "109");
+        int a=1/0;
+        return result;
+    }
 
-        List<Map<String, Object>> maps = jdbcTemplate.queryForList("select * from \"JEECGBOOT\".\"XSY_TEST\"");
-        return maps;
+    @Override
+    public Integer executeDeleteSQL(Long sqlId) throws Exception {
+        SQLInfo sql = masterDataSourceMapper.getSQLBySqlId(sqlId);
+        log.info("获取到sql="+sql.getStatement());
+        JdbcTemplate jdbcTemplate =establishConnectionBySql(sql);
+        int update = jdbcTemplate.update(sql.getStatement(), 100);
+        int a=1/0;
+        return update;
+    }
+
+    @Override
+    public Integer executeUpdateSQL(Long sqlId) throws Exception {
+        SQLInfo sql = masterDataSourceMapper.getSQLBySqlId(sqlId);
+        log.info("获取到sql="+sql.getStatement());
+        JdbcTemplate jdbcTemplate =establishConnectionBySql(sql);
+        return jdbcTemplate.update(sql.getStatement(),"蓬莱大道","移动",25);
     }
 
     public Object[] attributes2Array(Object o) throws IllegalAccessException {
         Class c = o.getClass();
         Field[] fields = c.getDeclaredFields();
         Object[] params = new Object[fields.length];
-        int i=0;
+        int i = 0;
         for (Field field : fields) {
             //为了可以访问到private修饰的成员变量
             field.setAccessible(true);
-            params[i]=field.get(o);
+            params[i] = field.get(o);
             i++;
         }
         return params;
